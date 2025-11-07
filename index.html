@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>AR.js NFT — Portada con Video</title>
+
+  <!-- A-Frame estable -->
+  <script src="https://cdn.jsdelivr.net/npm/aframe@1.6.0/dist/aframe-master.min.js"></script>
+  <!-- AR.js para A-Frame con soporte NFT -->
+  <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar-nft.js"></script>
+
+  <style>
+    html, body { height: 100%; }
+    body { margin: 0; overflow: hidden; }
+    .arjs-loader {
+      height: 100%; width: 100%; position: absolute; top: 0; left: 0;
+      background: rgba(0,0,0,.8); z-index: 9999; display: flex; justify-content: center; align-items: center;
+    }
+    .arjs-loader div { color: #fff; font-size: 1.1rem; line-height: 1.4; padding: 0 1rem; text-align: center; }
+  </style>
+
+  <script>
+    // Componente simple para reproducir/pausar el video cuando el marcador aparece/desaparece
+    AFRAME.registerComponent('videohandler', {
+      init: function () {
+        const marker = this.el;
+        this.vid = document.querySelector('#vid');
+
+        marker.addEventListener('markerFound', () => {
+          // iOS/Android: requiere muted+playsinline para autoplay
+          this.vid.muted = true;
+          this.vid.play().catch(()=>{/* ignorar bloqueo si el navegador exige gesto */});
+        });
+
+        marker.addEventListener('markerLost', () => {
+          this.vid.pause();
+          this.vid.currentTime = 0;
+        });
+      }
+    });
+
+    // Oculta el loader cuando AR.js termina de cargar los descriptores NFT
+    document.addEventListener('arjs-nft-loaded', () => {
+      const loader = document.querySelector('.arjs-loader');
+      if (loader) loader.style.display = 'none';
+    });
+  </script>
+</head>
+<body>
+  <!-- Loader -->
+  <div class="arjs-loader"><div>Cargando AR…<br/>Por favor, espera.</div></div>
+
+  <a-scene
+    vr-mode-ui="enabled: false"
+    renderer="antialias: true; alpha: true; precision: medium;"
+    embedded
+    arjs="trackingMethod: best; sourceType: webcam; facingMode: user; debugUIEnabled: false;"
+  >
+    <!-- Activos -->
+    <a-assets>
+      <video id="vid"
+             src="./assets/Circo.mp4"
+             preload="auto"
+             loop
+             autoplay
+             muted
+             playsinline
+             crossorigin="anonymous"
+             webkit-playsinline>
+      </video>
+    </a-assets>
+
+    <!-- Marcador NFT (coloca tus archivos .fset/.fset3/.iset en assets/nft/portada) -->
+    <a-nft
+      videohandler
+      type="nft"
+      url="./assets/ARNFT/portada"
+      smooth="true"
+      smoothCount="10"
+      smoothTolerance="0.01"
+      smoothThreshold="5"
+    >
+      <!-- Plano de video alineado a la imagen -->
+      <a-video
+        src="#vid"
+        position="400 0 0"
+        rotation="90 0 180"
+        width="750"
+        height="400">
+      </a-video>
+    </a-nft>
+
+    <a-entity camera></a-entity>
+  </a-scene>
+</body>
+</html>
